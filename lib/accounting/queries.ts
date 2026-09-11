@@ -4,6 +4,9 @@ import type {
   Counterparty,
   FiscalYear,
   PostedLine,
+  PurchaseInvoice,
+  SalesInvoice,
+  SalesInvoiceLine,
   TaxCategory,
 } from "@/lib/accounting/types";
 
@@ -124,6 +127,138 @@ export async function voidJournalEntry(entryId: string, fiscalYearId: string) {
   const { error } = await supabase.rpc("void_journal_entry", {
     p_entry_id: entryId,
     p_new_entry_number: newEntryNumber,
+  });
+  if (error) throw error;
+}
+
+// ============ 買掛金（仕入請求書） ============
+
+export async function getPurchaseInvoices(): Promise<PurchaseInvoice[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("purchase_invoices")
+    .select("*")
+    .order("received_date", { ascending: false });
+  if (error) throw error;
+  return data as PurchaseInvoice[];
+}
+
+/** Records the invoice and posts the 借方[経費]/貸方 未払金 entry atomically via RPC. */
+export async function recordPurchaseInvoice(header: {
+  counterparty_id: string;
+  vendor_invoice_number?: string;
+  received_date: string;
+  due_date?: string;
+  amount: number;
+  expense_account_id: string;
+  fiscal_year_id: string;
+  evidence_url?: string;
+  description?: string;
+}): Promise<string> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("record_purchase_invoice", { header });
+  if (error) throw error;
+  return data as string;
+}
+
+/** Marks the invoice paid and posts the 借方 未払金/貸方 普通預金 settling entry atomically. */
+export async function markPurchaseInvoicePaid(invoiceId: string, paidDate: string, paidAmount: number) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("mark_purchase_invoice_paid", {
+    p_invoice_id: invoiceId,
+    p_paid_date: paidDate,
+    p_paid_amount: paidAmount,
+  });
+  if (error) throw error;
+}
+
+// ============ 売掛金（売上請求書） ============
+
+export async function getSalesInvoices(): Promise<SalesInvoice[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("sales_invoices")
+    .select("*")
+    .order("issue_date", { ascending: false });
+  if (error) throw error;
+  return data as SalesInvoice[];
+}
+
+export async function getSalesInvoice(id: string): Promise<SalesInvoice | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("sales_invoices").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data as SalesInvoice | null;
+}
+
+export async function getSalesInvoiceLines(salesInvoiceId: string): Promise<SalesInvoiceLine[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("sales_invoice_lines")
+    .select("*")
+    .eq("sales_invoice_id", salesInvoiceId)
+    .order("line_no");
+  if (error) throw error;
+  return data as SalesInvoiceLine[];
+}
+
+/** Creates a draft invoice + its line items in one go (no journal entry yet — that happens on finalize). */
+export async function createSalesInvoiceDraft(
+  header: {
+    counterparty_id: string;
+    fiscal_year_id: string;
+    issue_date: string;
+    due_date?: string;
+    notes?: string;
+  },
+  lines: Array<{
+    description: string;
+    revenue_account_id: string;
+    quantity: number;
+    unit_price: number;
+    amount: number;
+  }>,
+): Promise<string> {
+  const supabase = await createClient();
+  const { data: invoice, error } = await supabase
+    .from("sales_invoices")
+    .insert({ ...header, created_by: (await supabase.auth.getUser()).data.user?.id })
+    .select("id")
+    .single();
+  if (error) throw error;
+
+  const { error: linesError } = await supabase.from("sales_invoice_lines").insert(
+    lines.map((line, idx) => ({ ...line, sales_invoice_id: invoice.id, line_no: idx + 1 })),
+  );
+  if (linesError) throw linesError;
+
+  return invoice.id as string;
+}
+
+/** Assigns the invoice number and posts the 借方 売掛金/貸方 各売上科目 entry atomically via RPC. */
+export async function finalizeSalesInvoice(invoiceId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("finalize_sales_invoice", { p_invoice_id: invoiceId });
+  if (error) throw error;
+}
+
+/** Marks the invoice as emailed. Plain single-table update — no journal entry involved. */
+export async function markSalesInvoiceSent(invoiceId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("sales_invoices")
+    .update({ status: "sent", sent_at: new Date().toISOString() })
+    .eq("id", invoiceId);
+  if (error) throw error;
+}
+
+/** Records payment and posts the 借方 普通預金/貸方 売掛金 settling entry atomically via RPC. */
+export async function recordSalesInvoicePayment(invoiceId: string, receivedDate: string, amount: number) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("record_sales_invoice_payment", {
+    p_invoice_id: invoiceId,
+    p_received_date: receivedDate,
+    p_amount: amount,
   });
   if (error) throw error;
 }

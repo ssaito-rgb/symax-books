@@ -272,6 +272,29 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_number_counters: {
+        Row: {
+          fiscal_year_id: string
+          last_number: number
+        }
+        Insert: {
+          fiscal_year_id: string
+          last_number?: number
+        }
+        Update: {
+          fiscal_year_id?: string
+          last_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_number_counters_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: true
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           created_at: string
@@ -416,6 +439,230 @@ export type Database = {
           },
         ]
       }
+      purchase_invoices: {
+        Row: {
+          amount: number
+          counterparty_id: string
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          evidence_url: string | null
+          expense_account_id: string
+          fiscal_year_id: string
+          id: string
+          journal_entry_id: string | null
+          paid_amount: number | null
+          paid_date: string | null
+          payment_journal_entry_id: string | null
+          received_date: string
+          status: string
+          vendor_invoice_number: string | null
+        }
+        Insert: {
+          amount: number
+          counterparty_id: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          evidence_url?: string | null
+          expense_account_id: string
+          fiscal_year_id: string
+          id?: string
+          journal_entry_id?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_journal_entry_id?: string | null
+          received_date: string
+          status?: string
+          vendor_invoice_number?: string | null
+        }
+        Update: {
+          amount?: number
+          counterparty_id?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          evidence_url?: string | null
+          expense_account_id?: string
+          fiscal_year_id?: string
+          id?: string
+          journal_entry_id?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_journal_entry_id?: string | null
+          received_date?: string
+          status?: string
+          vendor_invoice_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_invoices_counterparty_id_fkey"
+            columns: ["counterparty_id"]
+            isOneToOne: false
+            referencedRelation: "counterparties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_expense_account_id_fkey"
+            columns: ["expense_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_payment_journal_entry_id_fkey"
+            columns: ["payment_journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_invoice_lines: {
+        Row: {
+          amount: number
+          description: string
+          id: string
+          line_no: number
+          quantity: number
+          revenue_account_id: string
+          sales_invoice_id: string
+          unit_price: number
+        }
+        Insert: {
+          amount: number
+          description: string
+          id?: string
+          line_no: number
+          quantity?: number
+          revenue_account_id: string
+          sales_invoice_id: string
+          unit_price: number
+        }
+        Update: {
+          amount?: number
+          description?: string
+          id?: string
+          line_no?: number
+          quantity?: number
+          revenue_account_id?: string
+          sales_invoice_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_invoice_lines_revenue_account_id_fkey"
+            columns: ["revenue_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_invoice_lines_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_invoices: {
+        Row: {
+          counterparty_id: string
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          fiscal_year_id: string
+          id: string
+          invoice_number: string | null
+          issue_date: string
+          journal_entry_id: string | null
+          notes: string | null
+          paid_amount: number | null
+          paid_date: string | null
+          payment_journal_entry_id: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          counterparty_id: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          fiscal_year_id: string
+          id?: string
+          invoice_number?: string | null
+          issue_date: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_journal_entry_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          counterparty_id?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          fiscal_year_id?: string
+          id?: string
+          invoice_number?: string | null
+          issue_date?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          payment_journal_entry_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_invoices_counterparty_id_fkey"
+            columns: ["counterparty_id"]
+            isOneToOne: false
+            referencedRelation: "counterparties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_invoices_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_invoices_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_invoices_payment_journal_entry_id_fkey"
+            columns: ["payment_journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tax_adjustments: {
         Row: {
           amount: number
@@ -513,6 +760,32 @@ export type Database = {
         Args: { header: Json; lines: Json }
         Returns: string
       }
+      finalize_sales_invoice: {
+        Args: { p_invoice_id: string }
+        Returns: undefined
+      }
+      mark_purchase_invoice_paid: {
+        Args: {
+          p_invoice_id: string
+          p_paid_amount: number
+          p_paid_date: string
+        }
+        Returns: undefined
+      }
+      next_entry_number: { Args: { p_fiscal_year_id: string }; Returns: string }
+      next_invoice_number: {
+        Args: { p_fiscal_year_id: string }
+        Returns: string
+      }
+      record_purchase_invoice: { Args: { header: Json }; Returns: string }
+      record_sales_invoice_payment: {
+        Args: {
+          p_amount: number
+          p_invoice_id: string
+          p_received_date: string
+        }
+        Returns: undefined
+      }
       void_journal_entry: {
         Args: { p_entry_id: string; p_new_entry_number: string }
         Returns: string
@@ -608,4 +881,38 @@ export type TablesUpdate<
       }
       ? U
       : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

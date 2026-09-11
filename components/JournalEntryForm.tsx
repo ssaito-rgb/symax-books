@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { linesAreBalanced, sumCredit, sumDebit } from "@/lib/accounting/balance";
 import { formatYen } from "@/lib/accounting/fiscal-year";
+import { uploadReceiptForOcr } from "@/lib/receipt-upload";
 import AccountPicker from "@/components/AccountPicker";
 import CounterpartyPicker from "@/components/CounterpartyPicker";
 import type { Account, Counterparty, FiscalYear, JournalLineDraft, TaxCategory } from "@/lib/accounting/types";
@@ -22,37 +23,6 @@ function emptyLine(): LineDraft {
     description: "",
     evidence_url: "",
   };
-}
-
-const MAX_UPLOAD_DIMENSION = 2000;
-
-/** Re-encodes to JPEG and downscales client-side (handles HEIC-from-iPhone and keeps upload size small). */
-async function normalizeImageForUpload(file: File): Promise<File> {
-  const objectUrl = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.src = objectUrl;
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error("画像を読み込めませんでした"));
-    });
-
-    const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
-    if (!blob) return file;
-    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
-  } catch {
-    return file; // fall back to the original file if browser can't decode it client-side
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
 }
 
 export default function JournalEntryForm({
@@ -108,33 +78,22 @@ export default function JournalEntryForm({
     setVendorHint(null);
 
     try {
-      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-      const normalized = isPdf ? file : await normalizeImageForUpload(file);
-      const formData = new FormData();
-      formData.append("file", normalized);
-
-      const res = await fetch("/api/receipts/upload", { method: "POST", body: formData });
-      const result = await res.json();
-
-      if (!res.ok) {
-        setOcrNotice(result.error ?? "領収書の処理に失敗しました。");
-        return;
-      }
-
+      const result = await uploadReceiptForOcr(file);
       const notices: string[] = [];
 
-      if (result.ocr) {
-        if (result.ocr.date) setEntryDate(result.ocr.date);
+      const ocr = result.ocr;
+      if (ocr) {
+        if (ocr.date) setEntryDate(ocr.date);
         setLines((prev) => {
           const next = [...prev];
-          if (result.ocr.amount) next[0] = { ...next[0], debit_amount: result.ocr.amount, credit_amount: 0 };
-          if (result.ocr.counterpartyId) next[0] = { ...next[0], counterparty_id: result.ocr.counterpartyId };
+          if (ocr.amount) next[0] = { ...next[0], debit_amount: ocr.amount, credit_amount: 0 };
+          if (ocr.counterpartyId) next[0] = { ...next[0], counterparty_id: ocr.counterpartyId };
           if (result.drive?.webViewLink) next[0] = { ...next[0], evidence_url: result.drive.webViewLink };
           return next;
         });
-        if (result.ocr.vendorRaw && !result.ocr.counterpartyId) {
+        if (ocr.vendorRaw && !ocr.counterpartyId) {
           setVendorHint(
-            `レシート読み取り候補: ${result.ocr.vendorRaw}（取引先マスタに未登録のようです。必要なら設定＞取引先マスタから追加してください）`,
+            `レシート読み取り候補: ${ocr.vendorRaw}（取引先マスタに未登録のようです。必要なら設定＞取引先マスタから追加してください）`,
           );
         }
         notices.push("OCRで日付・金額を1行目に自動入力しました。内容を確認してください。");
@@ -151,8 +110,8 @@ export default function JournalEntryForm({
       }
 
       setOcrNotice(notices.join(" "));
-    } catch {
-      setOcrNotice("領収書の処理中にエラーが発生しました。");
+    } catch (err) {
+      setOcrNotice(err instanceof Error ? err.message : "領収書の処理中にエラーが発生しました。");
     } finally {
       setOcrLoading(false);
     }

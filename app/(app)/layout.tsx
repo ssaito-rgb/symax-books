@@ -5,6 +5,9 @@ import LogoutButton from "@/components/LogoutButton";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "ダッシュボード" },
   { href: "/journal", label: "仕訳" },
+  { href: "/receipts/bulk", label: "一括読込" },
+  { href: "/payables", label: "買掛金" },
+  { href: "/invoices", label: "請求書" },
   { href: "/ledger", label: "総勘定元帳" },
   { href: "/trial-balance", label: "試算表" },
   { href: "/reports/pl", label: "損益計算書" },

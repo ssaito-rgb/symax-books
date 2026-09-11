@@ -64,3 +64,43 @@ export type JournalLineDraft = {
   description?: string;
   evidence_url?: string;
 };
+
+export type PurchaseInvoice = {
+  id: string;
+  counterparty_id: string;
+  vendor_invoice_number: string | null;
+  received_date: string;
+  due_date: string | null;
+  amount: number;
+  expense_account_id: string;
+  fiscal_year_id: string;
+  status: "unpaid" | "paid" | "void";
+  evidence_url: string | null;
+  paid_date: string | null;
+  paid_amount: number | null;
+};
+
+export type SalesInvoice = {
+  id: string;
+  invoice_number: string | null;
+  counterparty_id: string;
+  fiscal_year_id: string;
+  issue_date: string;
+  due_date: string | null;
+  status: "draft" | "finalized" | "sent" | "paid" | "void";
+  notes: string | null;
+  paid_date: string | null;
+  paid_amount: number | null;
+  sent_at: string | null;
+};
+
+export type SalesInvoiceLine = {
+  id: string;
+  sales_invoice_id: string;
+  line_no: number;
+  description: string;
+  revenue_account_id: string;
+  quantity: number;
+  unit_price: number;
+  amount: number;
+};
