@@ -2,6 +2,7 @@ import { getAccounts, getFiscalYears, getPostedLines } from "@/lib/accounting/qu
 import { pickCurrentFiscalYear, formatYen } from "@/lib/accounting/fiscal-year";
 import { computeBalanceSheet } from "@/lib/accounting/report";
 import BsFilters from "@/components/BsFilters";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default async function BalanceSheetPage({
   searchParams,
@@ -20,14 +21,14 @@ export default async function BalanceSheetPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">貸借対照表（BS）</h1>
-        <BsFilters fiscalYears={fiscalYears} selectedFiscalYearId={fiscalYear.id} asOfDate={asOfDate} />
-      </div>
-      <p className="text-sm text-gray-500">{asOfDate} 時点</p>
+      <PageHeader
+        title="貸借対照表（BS）"
+        subtitle={`${asOfDate} 時点`}
+        action={<BsFilters fiscalYears={fiscalYears} selectedFiscalYearId={fiscalYear.id} asOfDate={asOfDate} />}
+      />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <h2 className="mb-2 text-sm font-semibold text-gray-700">資産</h2>
           <table className="w-full text-sm">
             <tbody>
@@ -47,7 +48,7 @@ export default async function BalanceSheetPage({
           </table>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <h2 className="mb-2 text-sm font-semibold text-gray-700">負債</h2>
           <table className="mb-4 w-full text-sm">
             <tbody>

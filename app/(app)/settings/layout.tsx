@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import PageHeader from "@/components/ui/PageHeader";
 
 const TABS = [
   { href: "/settings/fiscal-years", label: "会計期間" },
@@ -8,12 +12,17 @@ const TABS = [
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">設定</h1>
+      <PageHeader title="設定" />
       <div className="flex gap-4 border-b border-gray-200 text-sm">
         {TABS.map((t) => (
-          <Link key={t.href} href={t.href} className="pb-2 text-gray-600 hover:text-indigo-600">
+          <Link
+            key={t.href}
+            href={t.href}
+            className={`pb-2 ${pathname === t.href ? "border-b-2 border-indigo-600 font-medium text-indigo-700" : "text-gray-600 hover:text-indigo-600"}`}
+          >
             {t.label}
           </Link>
         ))}

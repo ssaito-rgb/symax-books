@@ -2,6 +2,7 @@ import { getAccounts, getFiscalYears, getPostedLines } from "@/lib/accounting/qu
 import { pickCurrentFiscalYear, formatYen } from "@/lib/accounting/fiscal-year";
 import { computeTrialBalance } from "@/lib/accounting/report";
 import FiscalYearSelect from "@/components/FiscalYearSelect";
+import PageHeader from "@/components/ui/PageHeader";
 
 const CATEGORY_LABELS: Record<string, string> = {
   asset: "資産",
@@ -32,12 +33,12 @@ export default async function TrialBalancePage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">試算表</h1>
-        <FiscalYearSelect fiscalYears={fiscalYears} selectedId={fiscalYear.id} basePath="/trial-balance" />
-      </div>
+      <PageHeader
+        title="試算表"
+        action={<FiscalYearSelect fiscalYears={fiscalYears} selectedId={fiscalYear.id} basePath="/trial-balance" />}
+      />
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-500">
             <tr>
@@ -51,7 +52,7 @@ export default async function TrialBalancePage({
           </thead>
           <tbody>
             {nonZeroRows.map((r) => (
-              <tr key={r.account.id} className="border-b border-gray-100">
+              <tr key={r.account.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-3 py-2">
                   {r.account.code} {r.account.name}
                 </td>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAccounts, getPostedLines } from "@/lib/accounting/queries";
 import { formatYen } from "@/lib/accounting/fiscal-year";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default async function JournalListPage() {
   const [lines, accounts] = await Promise.all([getPostedLines(), getAccounts(true)]);
@@ -30,12 +31,14 @@ export default async function JournalListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">仕訳一覧</h1>
-        <Link href="/journal/new" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-          仕訳を入力
-        </Link>
-      </div>
+      <PageHeader
+        title="仕訳一覧"
+        action={
+          <Link href="/journal/new" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+            仕訳を入力
+          </Link>
+        }
+      />
 
       <div className="flex flex-col gap-2">
         {sorted.length === 0 && (

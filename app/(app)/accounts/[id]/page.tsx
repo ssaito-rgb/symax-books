@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getAccounts, getTaxCategories } from "@/lib/accounting/queries";
 import AccountForm from "@/components/AccountForm";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default async function EditAccountPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -10,7 +11,7 @@ export default async function EditAccountPage({ params }: { params: Promise<{ id
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">勘定科目を編集：{account.name}</h1>
+      <PageHeader title={`勘定科目を編集：${account.name}`} />
       <AccountForm account={account} taxCategories={taxCategories} />
     </div>
   );

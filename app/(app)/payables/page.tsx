@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAccounts, getCounterparties, getPurchaseInvoices } from "@/lib/accounting/queries";
 import { formatYen } from "@/lib/accounting/fiscal-year";
 import MarkPurchasePaidForm from "@/components/MarkPurchasePaidForm";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default async function PayablesPage({
   searchParams,
@@ -22,12 +23,15 @@ export default async function PayablesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">買掛金（受け取った請求書）</h1>
-        <Link href="/payables/new" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-          請求書を登録
-        </Link>
-      </div>
+      <PageHeader
+        title="買掛金（受け取った請求書）"
+        subtitle="仕入先・外注先から受け取った請求書を記録し、支払いを管理します。"
+        action={
+          <Link href="/payables/new" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+            請求書を登録
+          </Link>
+        }
+      />
 
       <div className="flex gap-4 border-b border-gray-200 text-sm">
         <Link href="/payables?tab=unpaid" className={`pb-2 ${tab === "unpaid" ? "border-b-2 border-indigo-600 font-medium" : "text-gray-500"}`}>
@@ -38,7 +42,7 @@ export default async function PayablesPage({
         </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-500">
             <tr>
@@ -52,7 +56,7 @@ export default async function PayablesPage({
           </thead>
           <tbody>
             {filtered.map((inv) => (
-              <tr key={inv.id} className="border-b border-gray-100">
+              <tr key={inv.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-3 py-2">{counterpartyName.get(inv.counterparty_id)}</td>
                 <td className="px-3 py-2">{inv.received_date}</td>
                 <td className="px-3 py-2">{inv.due_date}</td>

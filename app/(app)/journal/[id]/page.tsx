@@ -29,7 +29,7 @@ export default async function JournalEntryDetailPage({ params }: { params: Promi
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-500">
             <tr>
@@ -42,7 +42,7 @@ export default async function JournalEntryDetailPage({ params }: { params: Promi
           </thead>
           <tbody>
             {entryLines.map((l) => (
-              <tr key={l.line_id} className="border-b border-gray-100">
+              <tr key={l.line_id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-3 py-2">{accountName.get(l.account_id)}</td>
                 <td className="px-3 py-2">{l.counterparty_id ? counterpartyName.get(l.counterparty_id) : ""}</td>
                 <td className="px-3 py-2 text-right font-mono">{l.debit_amount ? formatYen(l.debit_amount) : ""}</td>

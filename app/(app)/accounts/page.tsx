@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAccounts } from "@/lib/accounting/queries";
 import { toggleAccountActive } from "@/app/(app)/accounts/actions";
+import PageHeader from "@/components/ui/PageHeader";
 import type { Account } from "@/lib/accounting/types";
 
 const CATEGORY_LABELS: Record<Account["category"], string> = {
@@ -16,14 +17,16 @@ export default async function AccountsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">勘定科目マスタ</h1>
-        <Link href="/accounts/new" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-          科目を追加
-        </Link>
-      </div>
+      <PageHeader
+        title="勘定科目マスタ"
+        action={
+          <Link href="/accounts/new" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+            科目を追加
+          </Link>
+        }
+      />
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-500">
             <tr>
@@ -38,7 +41,7 @@ export default async function AccountsPage() {
           </thead>
           <tbody>
             {accounts.map((a) => (
-              <tr key={a.id} className={`border-b border-gray-100 ${a.is_active ? "" : "text-gray-400"}`}>
+              <tr key={a.id} className={`border-b border-gray-100 hover:bg-gray-50 ${a.is_active ? "" : "text-gray-400"}`}>
                 <td className="px-3 py-2 font-mono">{a.code}</td>
                 <td className="px-3 py-2">{a.name}</td>
                 <td className="px-3 py-2">{CATEGORY_LABELS[a.category]}</td>

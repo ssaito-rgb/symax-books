@@ -2,6 +2,7 @@ import { getAccounts, getCounterparties, getFiscalYears, getPostedLines } from "
 import { pickCurrentFiscalYear, formatYen } from "@/lib/accounting/fiscal-year";
 import { computeLedger } from "@/lib/accounting/report";
 import LedgerFilters from "@/components/LedgerFilters";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default async function LedgerPage({
   searchParams,
@@ -28,7 +29,7 @@ export default async function LedgerPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">総勘定元帳</h1>
+      <PageHeader title="総勘定元帳" />
       <LedgerFilters
         accounts={accounts}
         fiscalYears={fiscalYears}
@@ -36,7 +37,7 @@ export default async function LedgerPage({
         selectedFiscalYearId={fiscalYear.id}
       />
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-500">
             <tr>
@@ -57,7 +58,7 @@ export default async function LedgerPage({
               <td className="px-3 py-2 text-right font-mono">{formatYen(openingBalance)}</td>
             </tr>
             {rows.map((r) => (
-              <tr key={r.entry_id + r.debit_amount + r.credit_amount} className="border-b border-gray-100">
+              <tr key={r.entry_id + r.debit_amount + r.credit_amount} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-3 py-2">{r.entry_date}</td>
                 <td className="px-3 py-2">{r.entry_number}</td>
                 <td className="px-3 py-2">{r.description}</td>

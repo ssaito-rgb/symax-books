@@ -2,6 +2,7 @@ import { getAccounts, getFiscalYears, getPostedLines } from "@/lib/accounting/qu
 import { pickCurrentFiscalYear, formatYen } from "@/lib/accounting/fiscal-year";
 import { computeIncomeStatement } from "@/lib/accounting/report";
 import FiscalYearSelect from "@/components/FiscalYearSelect";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default async function IncomeStatementPage({
   searchParams,
@@ -18,15 +19,13 @@ export default async function IncomeStatementPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">損益計算書（PL）</h1>
-        <FiscalYearSelect fiscalYears={fiscalYears} selectedId={fiscalYear.id} basePath="/reports/pl" />
-      </div>
-      <p className="text-sm text-gray-500">
-        {fiscalYear.start_date} 〜 {fiscalYear.end_date}
-      </p>
+      <PageHeader
+        title="損益計算書（PL）"
+        subtitle={`${fiscalYear.start_date} 〜 ${fiscalYear.end_date}`}
+        action={<FiscalYearSelect fiscalYears={fiscalYears} selectedId={fiscalYear.id} basePath="/reports/pl" />}
+      />
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <h2 className="mb-2 text-sm font-semibold text-gray-700">売上</h2>
         <table className="mb-4 w-full text-sm">
           <tbody>
