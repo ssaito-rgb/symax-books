@@ -4,6 +4,7 @@ const TABS = [
   { href: "/settings/fiscal-years", label: "会計期間" },
   { href: "/settings/counterparties", label: "取引先マスタ" },
   { href: "/settings/tax-categories", label: "消費税区分" },
+  { href: "/settings/google-drive", label: "Google Drive連携" },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

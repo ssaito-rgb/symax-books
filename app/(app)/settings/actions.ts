@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { disconnectGoogle } from "@/lib/google/oauth";
 
 export async function createFiscalYear(formData: FormData) {
   const supabase = await createClient();
@@ -50,4 +51,10 @@ export async function createCounterparty(formData: FormData) {
   });
   if (error) throw error;
   revalidatePath("/settings/counterparties");
+}
+
+export async function disconnectGoogleAction() {
+  const supabase = await createClient();
+  await disconnectGoogle(supabase);
+  revalidatePath("/settings/google-drive");
 }

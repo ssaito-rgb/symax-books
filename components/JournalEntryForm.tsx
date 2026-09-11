@@ -24,6 +24,37 @@ function emptyLine(): LineDraft {
   };
 }
 
+const MAX_UPLOAD_DIMENSION = 2000;
+
+/** Re-encodes to JPEG and downscales client-side (handles HEIC-from-iPhone and keeps upload size small). */
+async function normalizeImageForUpload(file: File): Promise<File> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = objectUrl;
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("画像を読み込めませんでした"));
+    });
+
+    const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+    if (!blob) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch {
+    return file; // fall back to the original file if browser can't decode it client-side
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export default function JournalEntryForm({
   accounts,
   counterparties,
@@ -46,6 +77,9 @@ export default function JournalEntryForm({
   const [lines, setLines] = useState<LineDraft[]>([emptyLine(), emptyLine()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrNotice, setOcrNotice] = useState<string | null>(null);
+  const [vendorHint, setVendorHint] = useState<string | null>(null);
 
   const accountById = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
   const totalDebit = sumDebit(lines);
@@ -62,6 +96,65 @@ export default function JournalEntryForm({
 
   function removeLine(key: string) {
     setLines((prev) => (prev.length > 2 ? prev.filter((l) => l.key !== key) : prev));
+  }
+
+  async function handleReceiptSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setOcrLoading(true);
+    setOcrNotice(null);
+    setVendorHint(null);
+
+    try {
+      const normalized = await normalizeImageForUpload(file);
+      const formData = new FormData();
+      formData.append("file", normalized);
+
+      const res = await fetch("/api/receipts/upload", { method: "POST", body: formData });
+      const result = await res.json();
+
+      if (!res.ok) {
+        setOcrNotice(result.error ?? "領収書の処理に失敗しました。");
+        return;
+      }
+
+      const notices: string[] = [];
+
+      if (result.ocr) {
+        if (result.ocr.date) setEntryDate(result.ocr.date);
+        setLines((prev) => {
+          const next = [...prev];
+          if (result.ocr.amount) next[0] = { ...next[0], debit_amount: result.ocr.amount, credit_amount: 0 };
+          if (result.ocr.counterpartyId) next[0] = { ...next[0], counterparty_id: result.ocr.counterpartyId };
+          if (result.drive?.webViewLink) next[0] = { ...next[0], evidence_url: result.drive.webViewLink };
+          return next;
+        });
+        if (result.ocr.vendorRaw && !result.ocr.counterpartyId) {
+          setVendorHint(
+            `レシート読み取り候補: ${result.ocr.vendorRaw}（取引先マスタに未登録のようです。必要なら設定＞取引先マスタから追加してください）`,
+          );
+        }
+        notices.push("OCRで日付・金額を1行目に自動入力しました。内容を確認してください。");
+      } else if (result.ocrError) {
+        notices.push(`OCR: ${result.ocrError}`);
+      }
+
+      if (result.drive) {
+        notices.push("Google Driveに保存しました。");
+      } else if (result.driveError) {
+        notices.push(`Drive: ${result.driveError}`);
+      } else {
+        notices.push("Google Drive未接続のため、証憑リンクは自動設定されません（設定＞Google Drive連携）。");
+      }
+
+      setOcrNotice(notices.join(" "));
+    } catch {
+      setOcrNotice("領収書の処理中にエラーが発生しました。");
+    } finally {
+      setOcrLoading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -173,6 +266,22 @@ export default function JournalEntryForm({
           />
         </div>
       </div>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-gray-300 bg-white p-3">
+        <label className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50">
+          {ocrLoading ? "読み取り中…" : "領収書を読み込む"}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleReceiptSelect}
+            disabled={ocrLoading}
+            className="hidden"
+          />
+        </label>
+        {ocrNotice && <p className="text-sm text-gray-600">{ocrNotice}</p>}
+      </div>
+      {vendorHint && <p className="text-xs text-amber-700">{vendorHint}</p>}
 
       <div className="flex flex-col gap-3">
         {lines.map((line, idx) => {
