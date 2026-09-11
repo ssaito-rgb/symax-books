@@ -40,8 +40,11 @@ export async function runTextDetection(buffer: Buffer): Promise<string> {
 /**
  * PDF OCR via Vision's async batch API (the sync `images:annotate` endpoint doesn't accept PDF).
  * Stages the file in GCS, polls the operation, reads the JSON result back from GCS, then cleans up.
- * Uses the caller's OAuth access token throughout (both for GCS and Vision) rather than the plain
- * API key, since GCS reads/writes need real IAM-backed credentials.
+ *
+ * Uses the caller's OAuth access token (cloud-platform scope) throughout, for both the Vision calls
+ * and the GCS reads/writes. Vision's async file access runs as the calling identity rather than a
+ * separate Vision service agent, so the token needs enough scope to call Vision itself, not just
+ * Storage — a plain API key has no IAM identity behind it and can't read a private bucket object.
  */
 export async function runPdfTextDetection(accessToken: string, bucket: string, pdfBuffer: Buffer): Promise<string> {
   const id = randomUUID();
@@ -63,10 +66,11 @@ export async function runPdfTextDetection(accessToken: string, bucket: string, p
       ],
     }),
   });
+  const startJson = await startRes.json();
   if (!startRes.ok) {
-    throw new Error(`PDF OCRの開始に失敗しました（HTTP ${startRes.status}）`);
+    throw new Error(startJson?.error?.message ?? `PDF OCRの開始に失敗しました（HTTP ${startRes.status}）`);
   }
-  const { name: operationName } = await startRes.json();
+  const operationName: string = startJson.name;
 
   const deadline = Date.now() + 50_000; // leave headroom under the route's maxDuration
   let done = false;

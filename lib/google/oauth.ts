@@ -2,12 +2,15 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database.types";
 
 // drive.file: write receipt files into the user's own Drive.
-//
-// PDF OCR (Phase 2.1, see plan) needs a second scope — devstorage.read_write, to stage PDFs in GCS
-// for Vision's async OCR — but that requires a GCP billing account, which is on hold for now. Don't
-// request it here until it's also registered on the OAuth consent screen's Data Access page, or the
-// consent flow breaks for everyone, including the already-working image-only Drive connection.
-const SCOPES = ["https://www.googleapis.com/auth/drive.file"].join(" ");
+// cloud-platform: call Vision's async batch API and read/write the GCS staging bucket for PDF OCR,
+// both under the user's own identity (they own the GCP project, so this is their existing Owner
+// access — no separate service account or IAM grant needed). Vision's async file access turned out
+// to run as the OAuth caller, not a dedicated Vision service agent, so this single broad scope
+// covers both Vision and Storage rather than devstorage.read_write alone.
+const SCOPES = [
+  "https://www.googleapis.com/auth/drive.file",
+  "https://www.googleapis.com/auth/cloud-platform",
+].join(" ");
 
 export class GoogleReauthRequiredError extends Error {
   constructor() {
@@ -76,7 +79,10 @@ export async function saveRefreshToken(
 ) {
   const { error } = await supabase
     .from("google_oauth_tokens")
-    .upsert({ user_id: userId, refresh_token: refreshToken, scope, updated_at: new Date().toISOString() });
+    .upsert(
+      { user_id: userId, refresh_token: refreshToken, scope, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" },
+    );
   if (error) throw error;
 }
 

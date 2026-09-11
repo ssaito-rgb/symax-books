@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
     }
     await saveRefreshToken(supabase, user.id, tokens.refresh_token, tokens.scope);
     settingsUrl.searchParams.set("connected", "1");
-  } catch {
+  } catch (err) {
+    console.error("[google oauth callback]", err);
     settingsUrl.searchParams.set("error", "exchange_failed");
   }
 
