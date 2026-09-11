@@ -21,7 +21,7 @@ export default async function GoogleDriveSettingsPage({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-gray-600">
-        領収書の写真をアップロードした際に、OCRで読み取った内容をもとにGoogle Driveへ自動保存するための連携です。アプリが作成したファイルのみにアクセスできる限定的な権限（drive.file）のみ要求します。
+        領収書の写真・PDFをアップロードした際に、OCRで読み取った内容をもとにGoogle Driveへ自動保存するための連携です。アプリが作成したファイルのみにアクセスできる限定的な権限（drive.file）と、PDFのOCR処理に使うCloud Storageへの読み書き権限（devstorage.read_write）を要求します。
       </p>
 
       {params.connected && (
@@ -39,11 +39,19 @@ export default async function GoogleDriveSettingsPage({
         {connected ? (
           <div className="flex items-center justify-between">
             <span className="text-sm text-green-700">✓ Google Driveに接続済みです</span>
-            <form action={disconnectGoogleAction}>
-              <button type="submit" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50">
-                接続を解除
-              </button>
-            </form>
+            <div className="flex gap-2">
+              <a
+                href="/api/google/oauth"
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+              >
+                再接続（権限を更新）
+              </a>
+              <form action={disconnectGoogleAction}>
+                <button type="submit" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50">
+                  接続を解除
+                </button>
+              </form>
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-between">

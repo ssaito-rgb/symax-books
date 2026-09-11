@@ -1,7 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database.types";
 
-const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+// drive.file: write receipt files into the user's own Drive.
+// devstorage.read_write: stage PDFs in GCS for Vision's async OCR (images use the sync API and don't need this).
+// Both scopes run under the user's own Google identity — they own the GCP project, so no separate service account is needed.
+const SCOPES = [
+  "https://www.googleapis.com/auth/drive.file",
+  "https://www.googleapis.com/auth/devstorage.read_write",
+].join(" ");
 
 export class GoogleReauthRequiredError extends Error {
   constructor() {
@@ -25,7 +31,7 @@ export function getGoogleAuthUrl(origin: string, state: string): string {
     client_id: requireEnv("GOOGLE_OAUTH_CLIENT_ID"),
     redirect_uri: redirectUriFor(origin),
     response_type: "code",
-    scope: DRIVE_SCOPE,
+    scope: SCOPES,
     access_type: "offline",
     prompt: "consent",
     include_granted_scopes: "true",
