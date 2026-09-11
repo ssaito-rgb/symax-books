@@ -1,6 +1,7 @@
 import { getAccounts, getFiscalYears, getPostedLines } from "@/lib/accounting/queries";
 import { pickCurrentFiscalYear, formatYen } from "@/lib/accounting/fiscal-year";
 import { computeTrialBalance } from "@/lib/accounting/report";
+import FiscalYearSelect from "@/components/FiscalYearSelect";
 
 const CATEGORY_LABELS: Record<string, string> = {
   asset: "資産",
@@ -33,20 +34,7 @@ export default async function TrialBalancePage({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">試算表</h1>
-        <form>
-          <select
-            name="fy"
-            defaultValue={fiscalYear.id}
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-            onChange={(e) => e.currentTarget.form?.submit()}
-          >
-            {fiscalYears.map((fy) => (
-              <option key={fy.id} value={fy.id}>
-                {fy.label}
-              </option>
-            ))}
-          </select>
-        </form>
+        <FiscalYearSelect fiscalYears={fiscalYears} selectedId={fiscalYear.id} basePath="/trial-balance" />
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">

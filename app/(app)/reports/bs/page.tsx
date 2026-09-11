@@ -1,6 +1,7 @@
 import { getAccounts, getFiscalYears, getPostedLines } from "@/lib/accounting/queries";
 import { pickCurrentFiscalYear, formatYen } from "@/lib/accounting/fiscal-year";
 import { computeBalanceSheet } from "@/lib/accounting/report";
+import BsFilters from "@/components/BsFilters";
 
 export default async function BalanceSheetPage({
   searchParams,
@@ -21,27 +22,7 @@ export default async function BalanceSheetPage({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">貸借対照表（BS）</h1>
-        <form className="flex items-center gap-2">
-          <select
-            name="fy"
-            defaultValue={fiscalYear.id}
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-            onChange={(e) => e.currentTarget.form?.submit()}
-          >
-            {fiscalYears.map((fy) => (
-              <option key={fy.id} value={fy.id}>
-                {fy.label}
-              </option>
-            ))}
-          </select>
-          <input
-            type="date"
-            name="asOf"
-            defaultValue={asOfDate}
-            onChange={(e) => e.currentTarget.form?.submit()}
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-          />
-        </form>
+        <BsFilters fiscalYears={fiscalYears} selectedFiscalYearId={fiscalYear.id} asOfDate={asOfDate} />
       </div>
       <p className="text-sm text-gray-500">{asOfDate} 時点</p>
 

@@ -1,12 +1,6 @@
 import { getFiscalYears } from "@/lib/accounting/queries";
-import { createFiscalYear, toggleFiscalYearClosed, updateFiscalYearTaxStatus } from "@/app/(app)/settings/actions";
-
-const TAX_STATUS_LABELS: Record<string, string> = {
-  undetermined: "未確定",
-  exempt: "免税事業者",
-  taxable_general: "課税事業者（原則課税）",
-  taxable_simplified: "課税事業者（簡易課税）",
-};
+import { createFiscalYear, toggleFiscalYearClosed } from "@/app/(app)/settings/actions";
+import TaxStatusSelect from "@/components/TaxStatusSelect";
 
 export default async function FiscalYearsSettingsPage() {
   const fiscalYears = await getFiscalYears();
@@ -31,21 +25,7 @@ export default async function FiscalYearsSettingsPage() {
                 <td className="px-3 py-2">{fy.start_date}</td>
                 <td className="px-3 py-2">{fy.end_date}</td>
                 <td className="px-3 py-2">
-                  <form action={updateFiscalYearTaxStatus} className="flex items-center gap-2">
-                    <input type="hidden" name="id" value={fy.id} />
-                    <select
-                      name="tax_status"
-                      defaultValue={fy.tax_status}
-                      onChange={(e) => e.currentTarget.form?.requestSubmit()}
-                      className="rounded-md border border-gray-300 px-2 py-1 text-xs"
-                    >
-                      {Object.entries(TAX_STATUS_LABELS).map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </form>
+                  <TaxStatusSelect fiscalYearId={fy.id} taxStatus={fy.tax_status} />
                 </td>
                 <td className="px-3 py-2">
                   <form action={toggleFiscalYearClosed}>
