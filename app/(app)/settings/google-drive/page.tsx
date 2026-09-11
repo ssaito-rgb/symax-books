@@ -21,7 +21,7 @@ export default async function GoogleDriveSettingsPage({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-gray-600">
-        領収書の写真・PDFをアップロードした際に、OCRで読み取った内容をもとにGoogle Driveへ自動保存するための連携です。アプリが作成したファイルのみにアクセスできる限定的な権限（drive.file）と、PDFのOCR処理に使うCloud Storageへの読み書き権限（devstorage.read_write）を要求します。
+        領収書の写真をアップロードした際に、OCRで読み取った内容をもとにGoogle Driveへ自動保存するための連携です。アプリが作成したファイルのみにアクセスできる限定的な権限（drive.file）のみ要求します。
       </p>
 
       {params.connected && (

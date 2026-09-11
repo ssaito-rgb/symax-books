@@ -273,7 +273,8 @@ export default function JournalEntryForm({
           {ocrLoading ? "読み取り中…" : "領収書を読み込む"}
           <input
             type="file"
-            accept="image/*,application/pdf"
+            accept="image/*"
+            capture="environment"
             onChange={handleReceiptSelect}
             disabled={ocrLoading}
             className="hidden"

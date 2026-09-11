@@ -2,12 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database.types";
 
 // drive.file: write receipt files into the user's own Drive.
-// devstorage.read_write: stage PDFs in GCS for Vision's async OCR (images use the sync API and don't need this).
-// Both scopes run under the user's own Google identity — they own the GCP project, so no separate service account is needed.
-const SCOPES = [
-  "https://www.googleapis.com/auth/drive.file",
-  "https://www.googleapis.com/auth/devstorage.read_write",
-].join(" ");
+//
+// PDF OCR (Phase 2.1, see plan) needs a second scope — devstorage.read_write, to stage PDFs in GCS
+// for Vision's async OCR — but that requires a GCP billing account, which is on hold for now. Don't
+// request it here until it's also registered on the OAuth consent screen's Data Access page, or the
+// consent flow breaks for everyone, including the already-working image-only Drive connection.
+const SCOPES = ["https://www.googleapis.com/auth/drive.file"].join(" ");
 
 export class GoogleReauthRequiredError extends Error {
   constructor() {
